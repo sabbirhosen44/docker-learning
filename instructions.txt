@@ -1,0 +1,26 @@
+====== dockerfile creatation ======
+-> after setup the react project. to create a dockerfile , delete the node modules folder, it's optional to delete the node modules.
+
+-> create a Dockerfile named file under the project folder.
+
+-> in Dockerfile:
+
+FROM node:18         //select the base image which is node and 18 is the node version.
+
+WORKDIR /myapp       //Set the working directory
+
+COPY . .             // Copy all project files into the container
+
+RUN  npm install     // Install dependencies
+
+EXPOSE 5173          // Expose the port project will run on
+
+CMD [ "npm","run","dev" ]  
+                     // Command to start the application
+
+
+
+====== docker image creatation ======
+-> run command in terminal : docker build .  // here . represents the directory where the Dockerfile is located.
+
+-> docker image ls      // it list the all the images 
