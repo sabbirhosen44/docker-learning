@@ -49,3 +49,8 @@ CMD [ "npm","run","dev" ]
  here -t is for tagging and :01 is for image version.
 -> to delete a docker image : docker rmi mywebapp:02
 -> docker rmi image_id (but for this we have to delete all container under this docker image_id)
+
+====== When we update our project ======
+-> create another docker image
+-> then create and run container along with the docker image with version
+-> we can also create container for previous image and then main the images.
