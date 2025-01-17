@@ -34,3 +34,10 @@ CMD [ "npm","run","dev" ]
 -> run the app out of the container : docker run -p 5173:5173 image_id
 -> run container in detached mode : docker run -d -p 5173:5173 image_id
 -> run multiple container : docker run -d -p 5174:5173 image_id
+
+
+====== Usefull info of container ======
+-> to see all the docker container list : docker ps -a
+-> to remove container : docker rm continer_name, container_name 
+-> to run a container and when command is givent to stop container then container will be removed: docker run  -d --rm -p  8080:5173 image_id
+-> to name a container by own choice: docker run -d --rm --name "myreactapp" -p 9000:5173 image_id
