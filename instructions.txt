@@ -39,5 +39,13 @@ CMD [ "npm","run","dev" ]
 ====== Usefull info of container ======
 -> to see all the docker container list : docker ps -a
 -> to remove container : docker rm continer_name, container_name 
--> to run a container and when command is givent to stop container then container will be removed: docker run  -d --rm -p  8080:5173 image_id
+-> to run a container and when command is given to stop container then container will be removed: docker run  -d --rm -p  8080:5173 image_id
 -> to name a container by own choice: docker run -d --rm --name "myreactapp" -p 9000:5173 image_id
+-> to start running a docker container that is already not running : docker start container_name
+
+
+====== Manage docker image ======
+-> create a docker image with name: "docker build -t mywebapp:01 ."
+ here -t is for tagging and :01 is for image version.
+-> to delete a docker image : docker rmi mywebapp:02
+-> docker rmi image_id (but for this we have to delete all container under this docker image_id)
