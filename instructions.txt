@@ -53,4 +53,38 @@ CMD [ "npm","run","dev" ]
 ====== When we update our project ======
 -> create another docker image
 -> then create and run container along with the docker image with version
--> we can also create container for previous image and then main the images.
+-> we can also create container for previous image and then maintain the images.
+
+====== Predefined Docker Images ======
+-> docker pull python
+-> docker pull nginx
+-> docker run -p 8080:80 nginx (here 80 is nginx port)
+
+
+====== Interactive mode with containers ======
+-> create a python folder
+-> create a python file : 
+print("Program to sum two numbers: ")
+
+a = int(input('Enter the first number : '))
+b = int(input("Enter the second number : "))
+
+result = a+b
+
+print(f'Sum of two numbers are : {result}')
+
+-> create a docker file under the python folder 
+
+FROM python
+
+WORKDIR /myapp
+
+COPY ./myapp.py .
+
+CMD [ "python", "myapp.py" ]
+
+-> build the docker image 
+-> create a Interactive container :  docker run -it (image_name or image_id)
+
+
+
