@@ -87,4 +87,10 @@ CMD [ "python", "myapp.py" ]
 -> create a Interactive container :  docker run -it (image_name or image_id)
 
 
+====== Push Image to docker hub ======
+-> docker login (to check you are logged in)
+-> create a repository in docker hub 
+-> docker build -t sabbirhosen926/react-app . (here sabbirhosen926/react-appname is according to the docker hub image name)
+-> docker push sabbirhosen926/react-app (for push to the docker hub)
+-> docker tag mywebapp:01 sabbirhosen926/react-app:01 (for ranaming)
 
