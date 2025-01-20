@@ -94,3 +94,9 @@ CMD [ "python", "myapp.py" ]
 -> docker push sabbirhosen926/react-app (for push to the docker hub)
 -> docker tag mywebapp:01 sabbirhosen926/react-app:01 (for ranaming)
 
+====== Using our images remotely : Pull Images ======
+-> docker pull sabbirhosen926/react-app:01
+-> docker pull sabbirhosen926/react-app:latest
+
+====== Understanding Docker Volume ======
+
