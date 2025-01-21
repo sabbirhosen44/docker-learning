@@ -123,3 +123,32 @@ if show_info=='y':
 -> create a volume where data file stores: docker run -it --rm -v myvolume:/myapp/ image_id (-v:denotes volume flag, myvolume is the volume name and /myapp/ is according to the WORKDIR location)
 -> for any command help, for example about volume : docker volume --help
 
+====== Mount binds in docker ======
+create a python file : try:
+    with open('./servers.txt', 'r') as file:
+        content = file.readlines()
+except Exception as e:
+    print(e, type(e))
+else:
+    for line in content:
+        print(f'{line.rstrip()}')
+
+-> create a server.txt file : 
+server-1
+server-2
+
+-> create Dockerfile under mount bind directory:
+FROM python
+
+WORKDIR /myapp
+
+COPY ./myapp.py .
+COPY ./servers.txt .
+
+CMD [ "python","myapp.py" ]
+
+-> create an image : docker build .
+-> run a container : docker run --rm eee5c6c90209
+but when we update the servers.txt files then the container shows the data when it was build. doesn't show the updated data
+-> to get updated data we have to do mount bind.
+-> docker run -v "absolute_path_in_local:directory_under_container" --rm image_id
