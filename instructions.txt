@@ -99,4 +99,27 @@ CMD [ "python", "myapp.py" ]
 -> docker pull sabbirhosen926/react-app:latest
 
 ====== Understanding Docker Volume ======
+-> create a python file takes username as a string:
+
+user_name = input("Enter your name to store in file or enter to proceed: ")
+if(user_name):
+  with open('user_info.txt','a') as file:
+    file.write(user_name+"\n")
+
+show_info = input("Do you want to see all user names? y/n: ")
+if show_info=='y':
+  try:
+      with open('user_info.txt','r') as file:
+         content = file.readlines()
+  except Exception as e:
+      print(e,type(e))
+  else:
+      for line in content:
+         print(f'{line.rstrip()}')
+
+-> then create a docker image : docker build .
+-> create and run the container : docker run -t image_id
+-> the when the container stop it can't track the permanent data of our user_info.txt file. 
+-> create a volume where data file stores: docker run -it --rm -v myvolume:/myapp/ image_id (-v:denotes volume flag, myvolume is the volume name and /myapp/ is according to the WORKDIR location)
+-> for any command help, for example about volume : docker volume --help
 
