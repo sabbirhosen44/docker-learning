@@ -92,7 +92,7 @@ CMD [ "python", "myapp.py" ]
 -> create a repository in docker hub 
 -> docker build -t sabbirhosen926/react-app . (here sabbirhosen926/react-appname is according to the docker hub image name)
 -> docker push sabbirhosen926/react-app (for push to the docker hub)
--> docker tag mywebapp:01 sabbirhosen926/react-app:01 (for ranaming)
+-> docker tag mywebapp:01 sabbirhosen926/react-app:01 (for using anoter image ranaming)
 
 ====== Using our images remotely : Pull Images ======
 -> docker pull sabbirhosen926/react-app:01
@@ -152,3 +152,183 @@ CMD [ "python","myapp.py" ]
 but when we update the servers.txt files then the container shows the data when it was build. doesn't show the updated data
 -> to get updated data we have to do mount bind.
 -> docker run -v "absolute_path_in_local:directory_under_container" --rm image_id
+-> example: docker run -v "C:\Users\HP\OneDrive\Desktop\docker-learning\Dokcer Practice Mount Bind\servers.txt:/myapp/servers.txt" 34dadbb41494
+
+====== Working with API ======
+-> create a python file named api_demo.py 
+
+import requests
+
+def fetch_random_cat_fact():
+    url = "https://meowfacts.herokuapp.com/"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Check for any HTTP errors
+
+        fact = response.text
+        return fact
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
+
+def main():
+    fact = fetch_random_cat_fact()
+    if fact:
+        print("Random Cat Fact:")
+        print(fact)
+
+if __name__ == "__main__":
+    main()
+
+-> when run this python file it will always fetch the cat data via api.
+
+-> now create a Dockerfile:
+    FROM python
+
+WORKDIR /myapp
+
+COPY ./api_demo.py .
+
+RUN pip install requests(more packages)
+
+CMD ["python","api_demo.py"]
+
+->then build an image and run the container.
+
+
+
+====== Container with Local DB ======
+-> create a sql_demo.py file :
+
+import psycopg2
+
+# Function to create a connection to the PostgreSQL database
+def create_connection():
+    return psycopg2.connect(
+        host="localhost",                   # or your host name
+        user="postgres",                   # PostgreSQL username
+        password="1234",                   # PostgreSQL password
+        dbname="userinfo"   # PostgreSQL database name
+    )
+
+# Function to create the table if it doesn't exist
+def create_table(connection):
+    cursor = connection.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usernames (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255)
+        )
+    """)
+    connection.commit()
+    cursor.close()
+
+# Function to insert a name into the database and write to file
+def insert_name(connection, name):
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO usernames (name) VALUES (%s)", (name,))
+    connection.commit()
+    cursor.close()
+
+    with open("servers.txt", "a") as file:
+        file.write(name + "\n")
+
+# Function to fetch all usernames from the database
+def fetch_all_usernames(connection):
+    cursor = connection.cursor()
+    cursor.execute("SELECT name FROM usernames")
+    usernames = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    return usernames
+
+# Main function
+def main():
+    connection = create_connection()
+    create_table(connection)
+
+    while True:
+        print("1. Add a name")
+        print("2. Show all usernames")
+        print("3. Quit")
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            name = input("Enter a name: ")
+            insert_name(connection, name)
+            print(f"Name '{name}' added to the database.")
+        elif choice == "2":
+            usernames = fetch_all_usernames(connection)
+            if usernames:
+                print("Usernames in the database:")
+                for name in usernames:
+                    print(name)
+            else:
+                print("No usernames found in the database.")
+        elif choice == "3":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+    connection.close()
+
+if __name__ == "__main__":
+    main()
+
+-> run the file locally using python sql_demo.py command
+-> then create a Dockerfile
+FROM python
+
+WORKDIR /myapp/
+
+COPY ./sql_demo.py .
+
+RUN pip install psycopg2-binary
+
+CMD [ "python", "sql_demo.py" ]
+
+-> then build a docker image and run the container : there must be error because docker cant get access to the localhost (host="localhost" in sql_demo.py file in create_connection() function)
+-> to fix this issues: just change  in the function
+def create_connection():
+    return psycopg2.connect(
+        host="host.docker.internal", // here change from localhost to host.docker.internal
+        user="postgres",                  
+        password="1234",                   
+        dbname="userinfo"   
+    )
+
+
+
+====== Communication between multiple containers ======
+-> first : docker pull postgres:14.18
+-> docker run -d --name postgres image_id this will stop the container automatically
+-> to debug run command: docker logs postgres 
+it will show
+Error: Database is uninitialized and superuser password is not specified.
+       You must specify POSTGRES_PASSWORD to a non-empty value for the
+       superuser. For example, "-e POSTGRES_PASSWORD=password" on "docker run".
+
+       You may also use "POSTGRES_HOST_AUTH_METHOD=trust" to allow all
+       connections without a password. This is *not* recommended.
+
+       See PostgreSQL documentation about "trust":
+       https://www.postgresql.org/docs/current/auth-trust.html
+
+-> to solve the issues: docker run -d --env POSTGRES_PASSWORD="1234" --env POSTGRES_DB="userinfo"  --name postgres 563a4985838f (here postgres password and postgres db name is provided as an environment)
+
+-> now the db container running properly. now the python project container should be configure
+
+-> to get the ip address and other info of a container : docker inspect container_name
+
+-> now in the network object get the ip address of the db container and place the host value in the sql_demo file : 
+def create_connection():
+    return psycopg2.connect(
+        host="172.17.0.3",
+        user="postgres",
+        password="1234",
+        dbname="userinfo"
+    )
+
+-> then run the python project container : docker run -it --rm  5816f539fc37
+-> now the Communication between two container (python project and db container) is successfull.

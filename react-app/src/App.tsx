@@ -13,8 +13,9 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>This is a demo project for docker tutorial!!!</h1>
+      <h1>This is a Docker tutorial project!</h1>
       <h3>Coded by : Md. Sabbir Hosen</h3>
+      <h3>PSTU</h3>
     </>
   );
 }
