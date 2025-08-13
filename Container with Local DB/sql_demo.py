@@ -1,25 +1,30 @@
 import psycopg2
 
+
 # Function to create a connection to the PostgreSQL database
 def create_connection():
     return psycopg2.connect(
-        host="172.17.0.3",                   # or your host name
-        user="postgres",                   # PostgreSQL username
-        password="1234",                   # PostgreSQL password
-        dbname="userinfo"   # PostgreSQL database name
+        host="postgresdb",  # or your host name
+        user="postgres",  # PostgreSQL username
+        password="1234",  # PostgreSQL password
+        dbname="userinfo",  # PostgreSQL database name
     )
+
 
 # Function to create the table if it doesn't exist
 def create_table(connection):
     cursor = connection.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS usernames (
             id SERIAL PRIMARY KEY,
             name VARCHAR(255)
         )
-    """)
+    """
+    )
     connection.commit()
     cursor.close()
+
 
 # Function to insert a name into the database and write to file
 def insert_name(connection, name):
@@ -31,6 +36,7 @@ def insert_name(connection, name):
     with open("servers.txt", "a") as file:
         file.write(name + "\n")
 
+
 # Function to fetch all usernames from the database
 def fetch_all_usernames(connection):
     cursor = connection.cursor()
@@ -38,6 +44,7 @@ def fetch_all_usernames(connection):
     usernames = [row[0] for row in cursor.fetchall()]
     cursor.close()
     return usernames
+
 
 # Main function
 def main():
@@ -69,6 +76,7 @@ def main():
             print("Invalid choice. Please try again.")
 
     connection.close()
+
 
 if __name__ == "__main__":
     main()

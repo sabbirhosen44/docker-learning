@@ -299,11 +299,10 @@ def create_connection():
     )
 
 
-
 ====== Communication between multiple containers ======
 -> first : docker pull postgres:14.18
 -> docker run -d --name postgres image_id this will stop the container automatically
--> to debug run command: docker logs postgres 
+-> to debug, run command: docker logs postgres 
 it will show
 Error: Database is uninitialized and superuser password is not specified.
        You must specify POSTGRES_PASSWORD to a non-empty value for the
@@ -332,3 +331,125 @@ def create_connection():
 
 -> then run the python project container : docker run -it --rm  5816f539fc37
 -> now the Communication between two container (python project and db container) is successfull.
+
+
+====== Creating Docker Network ======
+-> in the Communication between containers section we see we have to inspect the db container and then use it's ip in the python project container sql_demo.py file host field in the create_connection() funtiction. so we can make it more easier using docker network
+
+-> to show network commands : docker network --help
+-> to create a network : docker network create my-net
+-> to see all the network: docker network ls
+
+-> now if we run the container of db image : docker run -d --env POSTGRES_PASSWORD="1234" --env POSTGRES_DB="userinfo"  --name postgres --network my-net 563a4985838f(image_id)
+
+-> so now the db container in under network
+
+-> now in the sql_demo file just change the host to the db container name : host="postgres" (as postgress is the db container name)
+
+-> now build an image for the python project(sql_demo)
+
+-> run the python project image container : docker run -it --rm --network my-net a728d7bd7964(image_id)
+
+
+====== Docker Compose ======
+-> Docker compose is just a configuration file to manage multiple containers(but we can also handle single container) running no same machine
+
+-> in traditional way like the Docker Network section we see we have to run a long command, it can be more long as needed. so to make it easier we use docker compose
+
+-> create a docker compose file in Container with Local DB directory: docker-compose.yml/docker-compose.yaml
+
+-> in docker-compose.yml (initially):
+services:
+  postgresdb:
+    image: "postgres:14.18"
+    environment:
+      - POSTGRES_PASSWORD="1234"
+      - POSTGRES_DB="userinfo"
+    container_name: "postgres"
+-> here Services : for services we select which image or containers should be use
+-> to run the docker compose : docker compose up
+-> to down : docker compose down
+-> to run in detach mode : docker compose up -d
+-> using docker compose it automatically remove the container when we down the compose
+
+
+====== Docker Compose with multiple container======
+-> we already place the db in the compose file but we want to place the python project in the compose and configure how they communicate with each other.
+
+-> basic concept : docker compose don't replace the Dockerfile, so we still need Dockerfile in our project
+
+-> for python app configuration:
+services:
+  postgresdb:
+    image: "postgres:14.18"
+    environment:
+      - POSTGRES_PASSWORD="1234"
+      - POSTGRES_DB="userinfo"
+    container_name: "postgres"
+
+  mypythonapp:
+    build: ./
+
+here we use build because we already have python projects Dockerfile. so just give Dockerfile's relative path.
+
+-> now if we compose up and then check container's we see there is only db container running. 
+-> if we see it using (docker logs container_id) it gives it can't connect with postgres server
+-> the problem is when we compose up then it will try to up the postgredb but in the mean time we want to up the python app that want to connect with postgredb which is not already up totally.
+-> to fix this issue : 
+mypythonapp:
+    build: ./
+    container_name: "mypyapp"
+    depends_on:
+      - "postgresdb"
+
+that means the mypythonapp is depends on the postgresdb service.
+
+-> make sure the postgredb service name and sql_demo.py file host name are same
+
+-> now if we run command compose up and then check container's we see only db the container running again pythonapp container still not running. it's because we have to set when the postgresdb completely ready for connect then mypythonapp will up.
+
+to fix this : 
+services:
+  postgresdb:
+    image: "postgres:14.18"
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=userinfo
+    container_name: "postgres"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      timeout: 20s
+      retries: 10
+
+  mypythonapp:
+    build: ./
+    container_name: "mypyapp"
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+
+
+add healthcheck to the postgresdb service and add 
+depends_on:
+      postgresdb:
+        condition: service_healthy 
+this code to the mypythonapp service
+
+-> now if we compose up then the python project will run but should be in interactive mode : 
+mypythonapp:
+    build: ./
+    container_name: "mypyapp"
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+mypythonapp service should be like this.
+
+-> now agian if we compose up then still the terminal is stuck and it's not working properly.
+
+-> to fix this issue we can run the two services separately using docker compose.
+-> to up postgresdb service: docker compose run -d postgredb
+-> to up mypythonapp service : docker compose run mypythonapp
+now we will give user input and run the python project

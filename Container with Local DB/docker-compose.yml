@@ -1,0 +1,20 @@
+services:
+  postgresdb:
+    image: "postgres:14.18"
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=userinfo
+    container_name: "postgres"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      timeout: 20s
+      retries: 10
+
+  mypythonapp:
+    build: ./
+    container_name: "mypyapp"
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
